@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>咖啡玄学鉴定器</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6f4e37 0%, #2c1d0f 100%);
+            color: #f5e9dc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* 标题样式 */
+        .header {
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #f5e9dc, #d7b899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+
+        .instructions {
+            font-size: 0.95rem;
+            opacity: 0.7;
+            margin-top: 20px;
+        }
+
+        /* 咖啡杯交互区域 */
+        .coffee-cup-container {
+            margin: 40px auto;
+            position: relative;
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .coffee-cup-container:active {
+            transform: scale(0.98);
+        }
+
+        .coffee-cup {
+            width: 100%;
+            height: 100%;
+            background-color: #3e2a1a;
+            border-radius: 0 0 50% 50%;
+            position: relative;
+            border: 12px solid #5d4037;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .cup-handle {
+            position: absolute;
+            right: -35px;
+            top: 40px;
+            width: 70px;
+            height: 70px;
+            border: 12px solid #5d4037;
+            border-radius: 50%;
+            background-color: transparent;
+        }
+
+        .coffee-liquid {
+            position: absolute;
+            top: 15px;
+            width: 90%;
+            height: 85%;
+            background: linear-gradient(to bottom, #4b371c 0%, #2c1d0f 100%);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .steam {
+            position: absolute;
+            top: -60px;
+            width: 100%;
+            height: 50px;
+            z-index: 0;
+        }
+
+        .steam span {
+            display: inline-block;
+            width: 12px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin: 0 8px;
+            animation: steamAnimation 3s infinite ease-in-out;
+        }
+
+        .steam span:nth-child(2) { animation-delay: 0.2s; }
+        .steam span:nth-child(3) { animation-delay: 0.5s; }
+        .steam span:nth-child(4) { animation-delay: 0.8s; }
+        .steam span:nth-child(5) { animation-delay: 1s; }
+
+        .prompt-text {
+            position: absolute;
+            bottom: -50px;
+            width: 100%;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #f5e9dc;
+            z-index: 10;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .down-arrow {
+            display: block;
+            font-size: 2rem;
+            margin-top: 5px;
+            animation: bounce 1.5s infinite;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(95, 75, 60, 0.5);
+            border-radius: 4px;
+            margin: 30px auto;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #c79b6a, #e6ccb3);
+            border-radius: 4px;
+            transition: width 0.1s linear;
+        }
+
+        .process-text {
+            margin-top: 15px;
+            font-size: 1.3rem;
+            min-height: 60px;
+            font-style: italic;
+            color: #e6ccb3;
+        }
+
+        /* 结果区域 */
+        .result-container {
+            display: none;
+            animation: fadeInUp 1s ease-out;
+            margin-top: 20px;
+        }
+
+        .coffee-card {
+            background: linear-gradient(145deg, #4a3728, #2c1d0f);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid #8b6b4a;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coffee-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, #c79b6a, #8b6b4a);
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #e6ccb3;
+            text-align: center;
+        }
+
+        .flavor-text {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #8b6b4a;
+        }
+
+        .composition h3, .advice h3 {
+            color: #c79b6a;
+            margin: 15px 0 8px 0;
+            font-size: 1.1rem;
+        }
+
+        .composition ul {
+            list-style-type: none;
+            padding-left: 10px;
+        }
+
+        .composition li {
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .composition li::before {
+            content: '•';
+            color: #c79b6a;
+            font-size: 1.5rem;
+            position: absolute;
+            left: 0;
+            top: -5px;
+        }
+
+        .advice-text {
+            background-color: rgba(139, 107, 74, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        .rarity-badge {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 15px;
+            background: linear-gradient(to right, #8b6b4a, #c79b6a);
+            color: #2c1d0f;
+            font-weight: bold;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* 按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 14px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 160px;
+        }
+
+        .btn-share {
+            background: linear-gradient(to right, #3a7bd5, #00d2ff);
+            color: white;
+        }
+
+        .btn-again {
+            background: linear-gradient(to right, #8b6b4a, #c79b6a);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* 页脚 */
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            text-align: center;
+            width: 100%;
+            padding: 20px 0;
+            border-top: 1px solid rgba(139, 107, 74, 0.3);
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes steamAnimation {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+            50% { transform: translateY(-20px) scale(1.1); opacity: 0.5; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; }
+            .coffee-cup-container { width: 180px; height: 180px; }
+            .btn { min-width: 140px; padding: 12px 20px; }
+            .action-buttons { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题区域 -->
+        <div class="header">
+            <h1><i class="fas fa-mug-hot"></i> 咖啡玄学鉴定器</h1>
+            <p class="tagline">萃取你的互联网灵魂风味</p>
+            <p class="instructions">长按下方的咖啡杯，开始你的风味萃取之旅...</p>
+        </div>
+
+        <!-- 咖啡杯交互区域 -->
+        <div class="coffee-cup-container" id="coffeeCup">
+            <div class="steam">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="coffee-cup">
+                <div class="coffee-liquid"></div>
+                <div class="cup-handle"></div>
+            </div>
+            <div class="prompt-text">
+                长按开始萃取<br>
+                <span class="down-arrow">↓</span>
+            </div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="process-text" id="processText">等待萃取开始...</div>
+
+        <!-- 结果区域 -->
+        <div class="result-container" id="resultContainer">
+            <div class="coffee-card">
+                <h2 class="result-title" id="resultTitle">一杯冰美式·人间清醒版</h2>
+                <p class="flavor-text" id="flavorText">表面苦涩，内心通透。擅长在周一早上看透一切，主打一个清醒地沉沦。</p>
+                
+                <div class="composition">
+                    <h3><i class="fas fa-flask"></i> 成分解析</h3>
+                    <ul id="compositionList">
+                        <!-- 由JS动态生成 -->
+                    </ul>
+                </div>
+                
+                <div class="advice">
+                    <h3><i class="fas fa-star"></i> 今日玄学建议</h3>
+                    <p class="advice-text" id="adviceText">今日宜潜水，忌接锅。你的"优雅"只需维持到下午三点。</p>
+                </div>
+                
+                <div class="rarity-badge" id="rarityBadge">社畜特调 · SSR</div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+                <button class="btn btn-share" id="shareBtn">
+                    <i class="fas fa-share-alt"></i> 生成分享图
+                </button>
+                <button class="btn btn-again" id="againBtn">
+                    <i class="fas fa-redo"></i> 再萃一杯
+                </button>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>本鉴定结果纯属娱乐，咖啡虽好，可不要贪杯哦 | 风味数据已保存至本地缓存</p>
+            <p>© 2023 咖啡玄学实验室 | 遇见即是萃取</p>
+        </div>
+    </div>
+
+    <script>
+        // 咖啡数据库 - 丰富的无厘头结果
+        const coffeeDatabase = [
+            {
+                name: "冰美式·人间清醒版",
+                flavor: "表面苦涩，内心通透。擅长在周一早上看透一切，主打一个清醒地沉沦。",
+                composition: ["99% 的清醒", "1% 对周末的幻念", "额外添加：三份「已读不回」抗性", "微量「上班如上坟」情绪"],
+                advice: "今日宜潜水，忌接锅。你的'优雅'只需维持到下午三点。",
+                rarity: "社畜特调 · SSR",
+                emoji: "🧊"
+            },
+            {
+                name: "焦糖玛奇朵·甜丧综合体",
+                flavor: "外表覆盖着厚厚的甜腻，底层却是一股看破红尘的微苦。人生信条：先甜为敬。",
+                composition: ["70% 糖分护体", "20% 选择性社恐", "8% 深夜emo因子", "2% 不想长大"],
+                advice: "今日宜点奶茶，忌做决定。重要的事情交给明天的自己。",
+                rarity: "甜系限定 · SR",
+                emoji: "🍯"
+            },
+            {
+                name: "手冲瑰夏·凡尔赛体验版",
+                flavor: "挑剔、讲究，且不经意地流露出优越感。能用三百字描述一杯水的风味。",
+                composition: ["45% 品味优越感", "30% 细节控", "20% 小众优越感", "5% 真的懂咖啡"],
+                advice: "今日宜探店打卡，忌将就。记住，你不是挑剔，你只是懂得生活。",
+                rarity: "大师甄选 · UR",
+                emoji: "👑"
+            },
+            {
+                name: "速溶三合一·摆烂救星",
+                flavor: "高效的糊弄学大师，能用最短时间达到「喝了咖啡」的心理安慰效果。",
+                composition: ["60% 将就主义", "25% 效率糊弄", "10% 甜到忧伤", "5% 咖啡因（疑似）"],
+                advice: "今日宜躺着，忌努力。人生就像速溶咖啡，有时不需要那么多仪式感。",
+                rarity: "日常经典 · R",
+                emoji: "⚡"
+            },
+            {
+                name: "抹茶拿铁·文艺氛围组",
+                flavor: "咖啡因绝缘体，但在咖啡馆的存在感极强。主要功能是提供拍照背景和文艺气息。",
+                composition: ["0% 咖啡因", "40% 摆拍需求", "35% 文艺情怀", "25% 真的喜欢抹茶"],
+                advice: "今日宜逛书店，忌急功近利。生活需要滤镜，也需要抹茶。",
+                rarity: "跨界联名 · SR",
+                emoji: "🍵"
+            },
+            {
+                name: "薄荷冷萃·脑洞清奇款",
+                flavor: "不按套路出牌，思维像薄荷一样清凉跳跃。经常在会议上提出让人愣住三秒的提议。",
+                composition: ["50% 清凉脑洞", "30% 跳跃思维", "15% 熬夜后遗症", "5% 薄荷上瘾"],
+                advice: "今日宜创新，忌循规蹈矩。别人笑你太疯癫，你笑他人看不穿。",
+                rarity: "冷门宝藏 · SSR",
+                emoji: "🧠"
+            }
+        ];
+
+        // 伪分析文案库
+        const processTexts = [
+            "正在研磨你昨夜的梦境...",
+            "萃取你的社交电量中...",
+            "解析嘴硬心软比例...",
+            "调和阴阳怪气与真诚...",
+            "注入今日份幸运因子...",
+            "过滤不必要的烦恼...",
+            "加入微量叛逆添加剂...",
+            "检测到强烈的摸鱼信号...",
+            "平衡工作与摆烂的跷跷板..."
+        ];
+
+        // DOM 元素
+        const coffeeCup = document.getElementById('coffeeCup');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const processText = document.getElementById('processText');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultTitle = document.getElementById('resultTitle');
+        const flavorText = document.getElementById('flavorText');
+        const compositionList = document.getElementById('compositionList');
+        const adviceText = document.getElementById('adviceText');
+        const rarityBadge = document.getElementById('rarityBadge');
+        const shareBtn = document.getElementById('shareBtn');
+        const againBtn = document.getElementById('againBtn');
+
+        // 长按相关变量
+        let pressTimer;
+        let isProcessing = false;
+        let currentResult = null;
+
+        // 从本地存储获取上次结果
+        const savedResult = localStorage.getItem('coffeeFortuneResult');
+        if (savedResult) {
+            try {
+                currentResult = JSON.parse(savedResult);
+                showResult(currentResult);
+            } catch(e) {
+                console.log("无有效保存结果");
+            }
+        }
+
+        // 长按开始事件
+        coffeeCup.addEventListener('mousedown', startPress);
+        coffeeCup.addEventListener('touchstart', startPress);
+
+        // 结束按压事件
+        coffeeCup.addEventListener('mouseup', cancelPress);
+        coffeeCup.addEventListener('mouseleave', cancelPress);
+        coffeeCup.addEventListener('touchend', cancelPress);
+        coffeeCup.addEventListener('touchcancel', cancelPress);
+
+        // 开始长按
+        function startPress(e) {
+            e.preventDefault();
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            pressTimer = setTimeout(startExtraction, 800); // 800ms长按触发
+        }
+
+        // 取消长按
+        function cancelPress() {
+            clearTimeout(pressTimer);
+            if (!isProcessing) return;
+        }
+
+        // 开始萃取过程
+        function startExtraction() {
+            // 隐藏提示，显示进度条
+            coffeeCup.style.pointerEvents = 'none';
+            progressContainer.style.display = 'block';
+            
+            // 重置进度
+            progressBar.style.width = '0%';
+            
+            // 模拟萃取过程
+            const duration = 3000; // 3秒
+            const interval = 100; // 更新间隔
+            const steps = duration / interval;
+            let currentStep = 0;
+            
+            const processInterval = setInterval(() => {
+                currentStep++;
+                const progress = (currentStep / steps) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                // 随机显示伪分析文案
+                if (currentStep % 5 === 0) {
+                    const randomText = processTexts[Math.floor(Math.random() * processTexts.length)];
+                    processText.textContent = randomText;
+                    
+                    // 添加打字效果
+                    processText.style.opacity = 0;
+                    setTimeout(() => {
+                        processText.style.opacity = 1;
+                    }, 50);
+                }
+                
+                if (currentStep >= steps) {
+                    clearInterval(processInterval);
+                    finishExtraction();
+                }
+            }, interval);
+        }
+
+        // 完成萃取，显示结果
+        function finishExtraction() {
+            // 随机选择一个咖啡结果
+            const result = coffeeDatabase[Math.floor(Math.random() * coffeeDatabase.length)];
+            currentResult = result;
+            
+            // 保存到本地存储
+            localStorage.setItem('coffeeFortuneResult', JSON.stringify(result));
+            
+            // 显示结果
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                processText.textContent = "萃取完成！风味已锁定";
+                showResult(result);
+            }, 500);
+        }
+
+        // 显示结果
+        function showResult(result) {
+            // 更新结果内容
+            resultTitle.innerHTML = `${result.emoji} ${result.name}`;
+            flavorText.textContent = result.flavor;
+            adviceText.textContent = result.advice;
+            rarityBadge.textContent = result.rarity;
+            
+            // 更新成分列表
+            compositionList.innerHTML = '';
+            result.composition.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                compositionList.appendChild(li);
+            });
+            
+            // 显示结果区域
+            resultContainer.style.display = 'block';
+            coffeeCup.style.display = 'none';
+            processText.style.display = 'none';
+            
+            // 滚动到结果区域
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // 按钮事件
+        againBtn.addEventListener('click', function() {
+            // 重置状态
+            resultContainer.style.display = 'none';
+            coffeeCup.style.display = 'block';
+            processText.style.display = 'block';
+            processText.textContent = "等待萃取开始...";
+            coffeeCup.style.pointerEvents = 'auto';
+            isProcessing = false;
+            
+            // 滚动到咖啡杯
+            coffeeCup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        shareBtn.addEventListener('click', function() {
+            // 简单的分享提示
+            processText.style.display = 'block';
+            processText.textContent = "正在生成风味分享卡...";
+            resultContainer.style.display = 'none';
+            
+            setTimeout(() => {
+                alert("分享功能已模拟！在实际项目中，这里会使用html2canvas库生成图片并分享。");
+                resultContainer.style.display = 'block';
+                processText.style.display = 'none';
+            }, 800);
+        });
+
+        // 添加一些动态效果
+        const steamSpans = document.querySelectorAll('.steam span');
+        steamSpans.forEach((span, index) => {
+            span.style.animationDelay = `${index * 0.3}s`;
+        });
+    </script>
+</body>
+</html>
